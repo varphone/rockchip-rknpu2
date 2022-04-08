@@ -235,7 +235,8 @@ typedef struct _rknn_tensor_attr {
     int32_t zp;                                         /* zero point for RKNN_TENSOR_QNT_AFFINE_ASYMMETRIC. */
     float scale;                                        /* scale for RKNN_TENSOR_QNT_AFFINE_ASYMMETRIC. */
 
-    uint32_t stride;                                    /* the stride of tensor, 0 means equal to width. */
+    uint32_t w_stride;                                  /* the stride of tensor along the width dimention of input,
+                                                           Note: it is read-only, 0 means equal to width. */
     uint32_t size_with_stride;                          /* the bytes size of tensor with stride. */
 
     uint8_t pass_through;                               /* pass through mode, for rknn_set_io_mem interface.
@@ -244,6 +245,8 @@ typedef struct _rknn_tensor_attr {
                                                            if FALSE, the buf data is converted into an input consistent with the model
                                                                      according to the following type and fmt. so the following variables
                                                                      need to be set.*/
+    uint32_t h_stride;                                  /* the stride along the height dimention of input,
+                                                           Note: it is write-only, if it was set to 0, h_stride = height. */
 } rknn_tensor_attr;
 
 /*
@@ -288,8 +291,8 @@ typedef struct _rknn_custom_string {
    The flags of rknn_tensor_mem.
 */
 typedef enum _rknn_tensor_mem_flags {
-    RKNN_TENSOR_MEMORY_FLAGS_ALLOC_INSIDE = 1,           /*Used to mark in rknn_destory_mem() whether it is necessary to release the "mem" pointer itself.
-                                                         If the flag RKNN_TENSOR_MEMORY_FLAGS_ALLOC_INSIDE is set, rknn_destory_mem() will call free(mem).*/
+    RKNN_TENSOR_MEMORY_FLAGS_ALLOC_INSIDE = 1,           /*Used to mark in rknn_destroy_mem() whether it is necessary to release the "mem" pointer itself.
+                                                         If the flag RKNN_TENSOR_MEMORY_FLAGS_ALLOC_INSIDE is set, rknn_destroy_mem() will call free(mem).*/
     RKNN_TENSOR_MEMORY_FLAGS_UNKNOWN
 } rknn_tensor_mem_flags;
 
@@ -573,9 +576,9 @@ rknn_tensor_mem* rknn_create_mem_from_mb_blk(rknn_context ctx, void *mb_blk, int
 rknn_tensor_mem* rknn_create_mem(rknn_context ctx, uint32_t size);
 
 
-/*  rknn_destory_mem (support allocate inside and outside)
+/*  rknn_destroy_mem (support allocate inside and outside)
 
-    destory tensor memory.
+    destroy tensor memory.
 
     input:
         rknn_context ctx            the handle of context.
@@ -583,7 +586,7 @@ rknn_tensor_mem* rknn_create_mem(rknn_context ctx, uint32_t size);
     return:
         int                         error code
 */
-int rknn_destory_mem(rknn_context ctx, rknn_tensor_mem *mem);
+int rknn_destroy_mem(rknn_context ctx, rknn_tensor_mem *mem);
 
 
 /*  rknn_set_weight_mem
